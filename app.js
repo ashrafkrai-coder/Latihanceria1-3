@@ -229,9 +229,9 @@ function home() {
       </div>
     </section>
     <section class="section">
-      <h2>2. Pilih subjek <span class="muted">· 10 soalan setiap latihan</span></h2>
+      <h2>2. Pilih subjek <span class="muted">· 10 soalan rawak setiap latihan</span></h2>
       <div class="subjects">
-        ${Object.entries(SUBJECTS).map(([k, [name, emoji]]) => `<button class="subject" data-subject="${k}"><span class="emoji">${emoji}</span><b>${name}</b><small>Mulakan kuiz ↗</small></button>`).join('')}
+        ${Object.entries(SUBJECTS).map(([k, [name, emoji]]) => `<button class="subject" data-subject="${k}"><span class="emoji">${emoji}</span><b>${name}</b><small>${QUESTION_BANK[year][k].length} soalan · Mulakan kuiz ↗</small></button>`).join('')}
       </div>
     </section>
     <section class="section">
@@ -285,8 +285,20 @@ function home() {
   };
 }
 
+function shuffle(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 function start(subject) {
-  const questions = QUESTION_BANK[year][subject].map(([q, options, answer, why]) => ({ q, options, answer, why }));
+  const questions = shuffle(QUESTION_BANK[year][subject]).slice(0, 10).map(([q, originalOptions, originalAnswer, why]) => {
+    const choices = shuffle(originalOptions.map((text, index) => ({ text, correct: index === originalAnswer })));
+    return { q, options: choices.map(choice => choice.text), answer: choices.findIndex(choice => choice.correct), why };
+  });
   state = { year, subject, questions, index: 0, answers: [], selected: null, checked: false };
   homeBtn.hidden = false;
   renderQuestion();
